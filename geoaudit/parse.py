@@ -72,15 +72,24 @@ def main(parser):
 
     logging.debug("%s" % ([r for r in sorted(reports)]))
 
+    analyze(reports)
+
+def analyze(reports):
+    "analyze the reports"
+
     coordslist = {}
     for r in reports.values():
         location = r['LOCATION']
+        #id = r['#']
         latitude = float(r['LATITUDE'])
         longitude = float(r['LONGITUDE'])
         coordslist.setdefault(location, []).append((latitude, longitude))
+        #coordslist.setdefault(ids, []).append(id)
         logging.debug("location %s lat %f lon %f coords %s" % (location, latitude, longitude, coordslist[location]))
 
-    logging.debug("")
+    logging.debug("Analyze each unique location")
+
+    locations = {}
 
     for location, coords in coordslist.items():
         logging.debug("location %s lat %f lon %f coords %s" % (location, latitude, longitude, coordslist[location]))
@@ -93,7 +102,18 @@ def main(parser):
         maxlat = reduce(lambda x,y: max(x, y), map(lambda x: x[0], coords))
         maxlon = reduce(lambda x,y: max(x, y), map(lambda x: x[1], coords))
 
-        printf("%f\t(%f, %f)\t(%f, %f)\t%s\n" % (math.sqrt( (maxlat-minlat) ** 2 + (maxlon-minlon) ** 2), minlat, minlon, maxlat, maxlon, location))
+        locations[location] = {'extent': math.sqrt( (maxlat-minlat) ** 2 + (maxlon-minlon) ** 2),
+                               'minlat': minlat,
+                               'minlon': minlon,
+                               'maxlat': maxlat,
+                               'maxlon': maxlon,
+                               #'ids': ids,
+                               'location': location }
+
+        printf("%(extent)f\t(%(minlat)f, %(minlon)f)\t(%(maxlat)f, %(maxlon)f)\t%(location)s\n" % locations[location])
+        # logging.info
+
+    return locations
 
 def parse(args, options):
     "parse the files"

@@ -12,8 +12,8 @@ import logging
 import csv
 from datetime import datetime
 
-from root import settings
 """
+from root import settings
 from django.core.management import setup_environ
 setup_environ(settings)
 from django.db import transaction
@@ -105,7 +105,7 @@ def parse_csv(file, options):
 "1256","Misrata airport struck by international forces, according to doctor","2011-03-20 01:18:00","Misrata Airport, Misrata, Libya","In Misurata, a rebel-held city in western Libya, a doctor said international forces had struck the airport, where Kadafi's troops had massed, silencing artillery that had been hitting the city for the last four days.","Geo-Located, Air Strike, Media News, ","32.329923","15.062648","http://www.latimes.com/news/nationworld/world/la-fg-libya-fighting-20110320,0,1292435.story, ",YES,NO
     """
 
-    reader = csv.DictReader(open(file), delimiter="\t")
+    reader = csv.DictReader(open(file), delimiter=",")
 
     reports = {}
 

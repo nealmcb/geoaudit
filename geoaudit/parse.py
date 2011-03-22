@@ -10,6 +10,7 @@ import optparse
 from optparse import make_option
 import logging
 import csv
+import math
 from datetime import datetime
 
 """
@@ -67,7 +68,32 @@ def main(parser):
         args.append(os.path.join(os.path.dirname(__file__), '../tests/ushahidi-report-test.csv'))
         logging.debug("using test file: " + args[0])
 
-    parse(args, options)
+    reports = parse(args, options)
+
+    logging.debug("%s" % ([r for r in sorted(reports)]))
+
+    coordslist = {}
+    for r in reports.values():
+        location = r['LOCATION']
+        latitude = float(r['LATITUDE'])
+        longitude = float(r['LONGITUDE'])
+        coordslist.setdefault(location, []).append((latitude, longitude))
+        logging.debug("location %s lat %f lon %f coords %s" % (location, latitude, longitude, coordslist[location]))
+
+    logging.debug("")
+
+    for location, coords in coordslist.items():
+        logging.debug("location %s lat %f lon %f coords %s" % (location, latitude, longitude, coordslist[location]))
+
+        if len(coords) == 1:		# FIXME - must be a better way to get reduce to return x[0] if only one element in coords  :)
+            coords.append(coords[0])
+        minlat = reduce(lambda x,y: min(x, y), map(lambda x: x[0], coords))
+        logging.debug("%f" % minlat)
+        minlon = reduce(lambda x,y: min(x, y), map(lambda x: x[1], coords))
+        maxlat = reduce(lambda x,y: max(x, y), map(lambda x: x[0], coords))
+        maxlon = reduce(lambda x,y: max(x, y), map(lambda x: x[1], coords))
+
+        printf("%f\t(%f, %f)\t(%f, %f)\t%s\n" % (math.sqrt( (maxlat-minlat) ** 2 + (maxlon-minlon) ** 2), minlat, minlon, maxlat, maxlon, location))
 
 def parse(args, options):
     "parse the files"
@@ -89,13 +115,13 @@ def parse(args, options):
     for file in files:
         logging.info("%s Processing %s" % (datetime.now().strftime("%H:%M:%S"), file))
         if file.endswith(".csv"):
-            reports = parse_csv(file, options)
-            print [r for r in sorted(reports)]
+            reports.update(parse_csv(file, options))
         else:
             logging.warning("Ignoring %s - unknown extension" % file)
             continue
 
     logging.info("%s Exit" % (datetime.now().strftime("%H:%M:%S")))
+    return reports
 
 #@transaction.commit_on_success
 def parse_csv(file, options):
@@ -126,6 +152,9 @@ vs adding stuff to format line and to vars dictionary....
 def debug(format, vars):
     logging
 """
+
+def printf(string):
+    sys.stdout.write(string)
 
 if __name__ == "__main__":
     main(parser)

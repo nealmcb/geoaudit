@@ -1,6 +1,9 @@
+2011-03-22  neal  <neal@mcburnett.org>
+
+	* geoaudit/parse.py (main):
+	Calculate bounding box for each unique location, and print the length of the diagonal for each one.
+
 2011-03-21  neal  <neal@mcburnett.org>
 
 	* geoaudit/parse.py:
 	Fix -d option: can't use logging.debug before logging.basicConfig
-
-

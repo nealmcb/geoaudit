@@ -1,0 +1,6 @@
+2011-03-21  neal  <neal@mcburnett.org>
+
+	* geoaudit/parse.py:
+	Fix -d option: can't use logging.debug before logging.basicConfig
+
+

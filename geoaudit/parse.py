@@ -54,15 +54,6 @@ def main(parser):
 
     (options, args) = parser.parse_args()
 
-    if len(args) == 0:
-        args.append(os.path.join(os.path.dirname(__file__), 'libyacrisismap-reports-test.csv'))
-        logging.debug("using test file: " + args[0])
-
-    parse(args, options)
-
-def parse(args, options):
-    "parse the files"
-
     if options.debug:
         loglevel = logging.DEBUG
     else:
@@ -70,7 +61,16 @@ def parse(args, options):
 
     logging.basicConfig(level=loglevel) # format='%(message)s'
 
-    logging.debug("args = %s" % list(args))
+    logging.debug("options = %s, args = %s" % (options, list(args)))
+
+    if len(args) == 0:
+        args.append(os.path.join(os.path.dirname(__file__), '../tests/ushahidi-report-test.csv'))
+        logging.debug("using test file: " + args[0])
+
+    parse(args, options)
+
+def parse(args, options):
+    "parse the files"
 
     files = []
 
@@ -89,7 +89,8 @@ def parse(args, options):
     for file in files:
         logging.info("%s Processing %s" % (datetime.now().strftime("%H:%M:%S"), file))
         if file.endswith(".csv"):
-            parse_csv(file, options)
+            reports = parse_csv(file, options)
+            print [r for r in sorted(reports)]
         else:
             logging.warning("Ignoring %s - unknown extension" % file)
             continue
@@ -112,14 +113,14 @@ def parse_csv(file, options):
     for r in reader:
         key = r['#']
         if reports.has_key(key):
-            logging.debug("%s Duplicate key %s on line %s" % (datetime.now().strftime("%H:%M:%S"), key, reader.reader.line_num))
+            logging.error("%s Duplicate key %s on line %s - ignored" % (datetime.now().strftime("%H:%M:%S"), key, reader.reader.line_num))
             continue;
         reports[key] = r
 
     return reports
 
 """
-how to add timestamp to front of every logging line?  subclass logging??
+FIXME: how to add timestamp to front of every logging line?  subclass logging??
 vs adding stuff to format line and to vars dictionary....
 
 def debug(format, vars):

@@ -1,0 +1,23 @@
+{"payload":{"domain":"http:\/\/cal.libyacrisismap.net\/",
+"locations":[
+ {"location":{"id":"1369","name":"Port of Tripoli","country_id":null,"latitude":"32.907021","longitude":"13.186649"}},
+ {"location":{"id":"1368","name":"Benghazi, Libya","country_id":null,"latitude":"32.109106","longitude":"20.08246"}},
+ {"location":{"id":"1367","name":"Tripoli, Libya","country_id":null,"latitude":"32.857254","longitude":"15.722402"}},
+ {"location":{"id":"1366","name":"Djerba Airport, Tunisia","country_id":null,"latitude":"32.859794","longitude":"15.722197"}},
+ {"location":{"id":"1364","name":"Saloum","country_id":null,"latitude":"31.487075","longitude":"25.193419"}},
+ {"location":{"id":"1363","name":"Saloum","country_id":null,"latitude":"31.49176","longitude":"25.176939"}},
+ {"location":{"id":"1362","name":"hospitals in Tripoli, Libya","country_id":null,"latitude":"32.876174","longitude":"13.187507"}},
+ {"location":{"id":"1361","name":"Az Zintan","country_id":null,"latitude":"31.933333","longitude":"12.233333"}},
+ {"location":{"id":"1360","name":"Same place as LJBC in Shari An Nasr St, Tripoli","country_id":null,"latitude":"32.884741","longitude":"13.171062"}},
+ {"location":{"id":"1359","name":"Libya","country_id":null,"latitude":"27.877928","longitude":"18.720703"}},
+ {"location":{"id":"1358","name":"Press Building, al-Jamahiriyah Street, Tripoli, Libya","country_id":null,"latitude":"32.881414","longitude":"13.186557"}},
+ {"location":{"id":"1357","name":"Ras Ajdir","country_id":null,"latitude":"33.15","longitude":"11.566667"}},
+ {"location":{"id":"1356","name":"Bengasi - Sabri - Calle Rafiq Ahmad Mahdavi","country_id":null,"latitude":"27.877928","longitude":"18.720703"}},
+ {"location":{"id":"1355","name":"Saloum, Egypt","country_id":null,"latitude":"31.5547","longitude":"25.1578"}},
+ {"location":{"id":"1354","name":"Press Building, al-Jamahirriyah St, Tripoli, Libya","country_id":null,"latitude":"32.881414","longitude":"13.186557"}},
+ {"location":{"id":"1353","name":"Al-Andalus District, Tripoli, Libya","country_id":null,"latitude":"32.876174","longitude":"13.187507"}},
+ {"location":{"id":"1352","name":"Saloum, Egypt","country_id":null,"latitude":"31.5547","longitude":"25.1578"}},
+ {"location":{"id":"1351","name":"Approx. loc. General Press Building, al-Jamahiriyah Street, Tripoli, Libya","country_id":null,"latitude":"32.881414","longitude":"13.186557"}},
+ {"location":{"id":"1350","name":"zintan, libya","country_id":null,"latitude":"30.2","longitude":"10.533333"}},
+ {"location":{"id":"1349","name":"Libya","country_id":null,"latitude":"33.14905","longitude":"11.55899"}}
+]},"error":{"code":"0","message":"No Error"}}

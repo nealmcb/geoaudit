@@ -4,6 +4,13 @@
 %InsertOptionParserUsage%
 """
 
+# TODO
+# Look for locations that are close to each other but with different names
+# Calculate consensus location
+# List report ids of outliers
+# Add support for getting data from the ushahidi web site via api or download form
+# testing from ipython: sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
+
 import os
 import sys
 import optparse
@@ -26,10 +33,10 @@ __copyright__ = "Copyright (c) 2011 Neal McBurnett"
 __license__ = "MIT"
 
 
-usage = """Usage: manage.py parse [options] [file]....
+usage = """Usage: parse.py [options] [file]....
 
 Example:
- manage.py parse -s 001_EV_p001.xml 002_AB_p022.xml 003_ED_p015.xml"""
+ geoaudit/parse.py tests/ushahidi-report-test.csv"""
 
 option_list = (
     make_option("-d", "--debug",
@@ -49,6 +56,47 @@ def set_options(args):
 
     (options, args) = parser.parse_args(args)
     return options
+
+class Location(object):
+    """
+    A group of geographic points that have been identified as a single unique location.
+    """
+    
+    def __init__(self):
+        """
+        Create an empty Location.
+        """
+
+        self.ids = []
+        self.names = None
+        self.lats = []
+        self.lons = []
+
+    def merge(self, report):
+        """
+        Merge in a new report
+        """
+        self.ids.append(report['#'])
+        if self.names:
+            if self.names != report['LOCATION']:
+                raise ValueError()
+        else:
+            self.names = report['LOCATION']
+
+        self.lats.append(float(report['LATITUDE']))
+        self.lons.append(float(report['LONGITUDE']))
+
+    def median(self):
+        """
+        Return the point specified by the median of latitudes and median of longitudes.
+        Note this is different from the Geometric Median which is harder to calculate:
+          http://en.wikipedia.org/wiki/Geometric_median
+        """
+
+        
+        
+    def __str__(self):
+        return "L%s: (%f,%f)\t%s" % (self.ids[0], self.lats[0], self.lons[0], self.names[0])
 
 def main(parser):
     """Parse files and do audit"""
@@ -72,51 +120,36 @@ def main(parser):
 
     logging.debug("%s" % ([r for r in sorted(reports)]))
 
-    analyze(reports)
+    locations = merge_by_name(reports)
 
-def analyze(reports):
-    "analyze the reports"
-
-    coordslist = {}
-    for r in reports.values():
-        location = r['LOCATION']
-        #id = r['#']
-        latitude = float(r['LATITUDE'])
-        longitude = float(r['LONGITUDE'])
-        coordslist.setdefault(location, []).append((latitude, longitude))
-        #coordslist.setdefault(ids, []).append(id)
-        logging.debug("location %s lat %f lon %f coords %s" % (location, latitude, longitude, coordslist[location]))
-
-    logging.debug("Analyze each unique location")
-
-    locations = {}
-
-    for location, coords in coordslist.items():
-        logging.debug("location %s lat %f lon %f coords %s" % (location, latitude, longitude, coordslist[location]))
-
-        if len(coords) == 1:		# FIXME - must be a better way to get reduce to return x[0] if only one element in coords  :)
-            coords.append(coords[0])
-        minlat = reduce(lambda x,y: min(x, y), map(lambda x: x[0], coords))
-        logging.debug("%f" % minlat)
-        minlon = reduce(lambda x,y: min(x, y), map(lambda x: x[1], coords))
-        maxlat = reduce(lambda x,y: max(x, y), map(lambda x: x[0], coords))
-        maxlon = reduce(lambda x,y: max(x, y), map(lambda x: x[1], coords))
-
-        locations[location] = {'extent': math.sqrt( (maxlat-minlat) ** 2 + (maxlon-minlon) ** 2),
-                               'minlat': minlat,
-                               'minlon': minlon,
-                               'maxlat': maxlat,
-                               'maxlon': maxlon,
-                               #'ids': ids,
-                               'location': location }
-
-        printf("%(extent)f\t(%(minlat)f, %(minlon)f)\t(%(maxlat)f, %(maxlon)f)\t%(location)s\n" % locations[location])
-        # logging.info
+    analyze(locations)
 
     return locations
 
+#@transaction.commit_on_success
+def parse_csv(file, options):
+    """Parse Ushahidi report export file
+    a comma-separated .csv file.
+    The first line has the column headers:
+#,INCIDENT TITLE,INCIDENT DATE,LOCATION,DESCRIPTION,CATEGORY,LATITUDE,LONGITUDE,NEWS LINKS,APPROVED,VERIFIED
+"1256","Misrata airport struck by international forces, according to doctor","2011-03-20 01:18:00","Misrata Airport, Misrata, Libya","In Misurata, a rebel-held city in western Libya, a doctor said international forces had struck the airport, where Kadafi's troops had massed, silencing artillery that had been hitting the city for the last four days.","Geo-Located, Air Strike, Media News, ","32.329923","15.062648","http://www.latimes.com/news/nationworld/world/la-fg-libya-fighting-20110320,0,1292435.story, ",YES,NO
+    """
+
+    reader = csv.DictReader(open(file), delimiter=",")
+
+    reports = {}
+
+    for r in reader:
+        key = r['#']
+        if reports.has_key(key):
+            logging.error("%s Duplicate key %s on line %s - ignored" % (datetime.now().strftime("%H:%M:%S"), key, reader.reader.line_num))
+            continue;
+        reports[key] = r
+
+    return reports
+
 def parse(args, options):
-    "parse the files"
+    "Parse the specified files.  If a directory is specified, parse all files in the directory."
 
     files = []
 
@@ -143,27 +176,37 @@ def parse(args, options):
     logging.info("%s Exit" % (datetime.now().strftime("%H:%M:%S")))
     return reports
 
-#@transaction.commit_on_success
-def parse_csv(file, options):
-    """Parse Ushahidi report export file
-    a comma-separated .csv file.
-    The first line has the column headers:
-#,INCIDENT TITLE,INCIDENT DATE,LOCATION,DESCRIPTION,CATEGORY,LATITUDE,LONGITUDE,NEWS LINKS,APPROVED,VERIFIED
-"1256","Misrata airport struck by international forces, according to doctor","2011-03-20 01:18:00","Misrata Airport, Misrata, Libya","In Misurata, a rebel-held city in western Libya, a doctor said international forces had struck the airport, where Kadafi's troops had massed, silencing artillery that had been hitting the city for the last four days.","Geo-Located, Air Strike, Media News, ","32.329923","15.062648","http://www.latimes.com/news/nationworld/world/la-fg-libya-fighting-20110320,0,1292435.story, ",YES,NO
+def merge_by_name(reports):
+    "Return list of Locations based on reports that have the same name"
+
+    locations = {}
+    for r in reports.values():
+        name = r['LOCATION']
+        locations.setdefault(name, Location()).merge(r)
+        logging.debug("location: %s" % locations[name])
+
+    logging.debug("Merge each unique location")
+
+    for location in locations.values():
+        logging.debug("location: %s" % location)
+
+        location.num = len(location.lats)
+        location.minlat = reduce(lambda x,y: min(x, y), location.lats)
+        location.minlon = reduce(lambda x,y: min(x, y), location.lons)
+        location.maxlat = reduce(lambda x,y: max(x, y), location.lats)
+        location.maxlon = reduce(lambda x,y: max(x, y), location.lons)
+        location.extent = math.sqrt( (location.maxlat-location.minlat) ** 2 + (location.maxlon-location.minlon) ** 2)
+
+    return locations
+
+def analyze(locations):
     """
-
-    reader = csv.DictReader(open(file), delimiter=",")
-
-    reports = {}
-
-    for r in reader:
-        key = r['#']
-        if reports.has_key(key):
-            logging.error("%s Duplicate key %s on line %s - ignored" % (datetime.now().strftime("%H:%M:%S"), key, reader.reader.line_num))
-            continue;
-        reports[key] = r
-
-    return reports
+    TODO: Look for outliers in the dictionary of Locations
+    """
+    
+    for location in locations.values():
+        if location.extent > 0.0:
+            printf("%(extent)5f %(num)d\t(%(minlat)f, %(minlon)f)\t(%(maxlat)f, %(maxlon)f)\t%(names)s\n" % location.__dict__)
 
 """
 FIXME: how to add timestamp to front of every logging line?  subclass logging??

@@ -9,7 +9,8 @@
 # Calculate consensus location
 # List report ids of outliers
 # Add support for getting data from the ushahidi web site via api or download form
-# testing from ipython: sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
+# testing from ipython: import sys; sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
+# Use real spherical coordinates for distance calculations, etc.
 
 import os
 import sys
@@ -93,10 +94,39 @@ class Location(object):
           http://en.wikipedia.org/wiki/Geometric_median
         """
 
+        lats = sorted(self.lats)
+        lons = sorted(self.lons)
+        num = len(lats)
+        # Median is the midpoint if odd, or average of 2 points if even
+        if num % 2:
+            return(lats[num/2], lons[num/2])
+        else:
+            return ( (lats[num/2 - 1] + lats[num/2]) / 2.0, (lons[num/2 - 1] + lons[num/2]) / 2.0)
         
+    def outliers(self, max_distance = .02):
+        """
+        return points in this Location that are further than "max_distance" from the median of this location.
+        """
         
+        median = self.median()
+
+        outs = []
+
+        for n in range(len(self.lats)):
+            point = (self.lats[n], self.lons[n])
+            if distance(median, point) > max_distance:
+                outs.append(point)
+
+        return outs
+
     def __str__(self):
         return "L%s: (%f,%f)\t%s" % (self.ids[0], self.lats[0], self.lons[0], self.names[0])
+
+def distance(pointa, pointb):
+    """
+    return the distance between pointa and pointb
+    """
+    return math.sqrt( (pointa[0]-pointb[0]) ** 2 + (pointa[1]-pointb[1]) ** 2)
 
 def main(parser):
     """Parse files and do audit"""

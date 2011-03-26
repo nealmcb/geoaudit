@@ -1,23 +1,29 @@
 #!/usr/bin/env python
-"""Parse Ushahidi reports download (csv) and look for discrepancies.
+"""
+Parse Ushahidi reports download (csv) and look for discrepancies.
 
 %InsertOptionParserUsage%
+
+TODO
+return report ids from outliers()
+
+Look for locations that are close to each other but with different names
+
+Location => LocationCluster
+Create Report class, Point class, Reports and LocationClusters classes with reporting, sort options
+produce outlier web page with links to reports
+Add support for getting data from the ushahidi web site via api or download form
+Use real spherical coordinates for distance calculations, etc.
+Link to a google map of the various points for a LocationCluster
+
+Any way to deal with reports that have multiple geolocations marked in them?
+
+Example for testing from ipython:
+import sys
+sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
+run parse.py
+main(parser)
 """
-
-# TODO
-# Location => LocationCluster
-# Create Report class, Point class, maybe Reports and Locations classes
-# return report ids from outliers()
-# produce outlier web page with links to reports
-# Look for locations that are close to each other but with different names
-# List report ids of outliers
-# Add support for getting data from the ushahidi web site via api or download form
-# Use real spherical coordinates for distance calculations, etc.
-# Link to a google map of the various points for a LocationCluster
-
-# Any way to deal with reports that have multiple geolocations marked in them?
-
-# testing from ipython: import sys; sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
 
 import os
 import sys
@@ -51,7 +57,7 @@ option_list = (
                   action="store_true", default=False,
                   help="turn on debugging output"),
     make_option("-s", "--size",
-                  default=0.02,
+                  type="float", default=0.2,
                   help="Maximum size of a Location"),
 )
 
@@ -113,9 +119,9 @@ class Location(object):
         else:
             return ( (lats[num/2 - 1] + lats[num/2]) / 2.0, (lons[num/2 - 1] + lons[num/2]) / 2.0)
         
-    def outliers(self, max_distance = .02):
+    def outliers(self, size = 0.2):
         """
-        return points in this Location that are further than "max_distance" from the median of this location.
+        return points in this Location that are further than "size" degrees from the median of this location.
         """
         
         median = self.median()
@@ -124,8 +130,8 @@ class Location(object):
 
         for n in range(len(self.lats)):
             point = (self.lats[n], self.lons[n])
-            if distance(median, point) > max_distance:
-                outs.append(point)
+            if distance(median, point) >= size:
+                outs.append(self.ids[n])
 
         return outs
 
@@ -162,7 +168,7 @@ def main(parser):
 
     locations = merge_by_name(reports)
 
-    analyze(locations, options)
+    analyze(locations, reports, options)
 
     return locations
 
@@ -239,20 +245,22 @@ def merge_by_name(reports):
 
     return locations
 
-def analyze(locations, options):
+def analyze(locations, reports, options):
     """
     Print large extents and outliers in the dictionary of Locations
     """
     
-    for location in locations.values():
-        if location.extent > 0.0:
+    # location_by_latitude = 
+    for location in sorted(locations.values(), key=lambda l:l.median()[0]):
+        if location.extent >= options.size:
             printf("%(extent).5f %(num)d  ll\t(%(minlat).4f %(minlon).4f)  ur\t(%(maxlat).4f %(maxlon).4f)\t%(names)s\n" % location.__dict__)
-
-        if location.extent > options.size:
             median = location.median()
             print "\tmedian\t(%.4f %.4f)" % (median[0], median[1])
-            for p in location.outliers():
-                print "\t\t(%.4f %.4f)" % (p[0], p[1])
+            for report in location.outliers(size=options.size):
+                print "\t\t(%.4f %.4f)\thttp://cal.libyacrisismap.net/admin/reports/edit/%s" % (float(reports[report]['LATITUDE']), float(reports[report]['LONGITUDE']), report)
+
+            print
+
 
 """
 FIXME: how to add timestamp to front of every logging line?  subclass logging??

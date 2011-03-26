@@ -5,12 +5,19 @@
 """
 
 # TODO
+# Location => LocationCluster
+# Create Report class, Point class, maybe Reports and Locations classes
+# return report ids from outliers()
+# produce outlier web page with links to reports
 # Look for locations that are close to each other but with different names
-# Calculate consensus location
 # List report ids of outliers
 # Add support for getting data from the ushahidi web site via api or download form
-# testing from ipython: import sys; sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
 # Use real spherical coordinates for distance calculations, etc.
+# Link to a google map of the various points for a LocationCluster
+
+# Any way to deal with reports that have multiple geolocations marked in them?
+
+# testing from ipython: import sys; sys.argv = ['parse.py', '-d', '/home/neal/info/ushahidi/libyacrisismap-reports-1301079295.csv']
 
 import os
 import sys
@@ -43,6 +50,9 @@ option_list = (
     make_option("-d", "--debug",
                   action="store_true", default=False,
                   help="turn on debugging output"),
+    make_option("-s", "--size",
+                  default=0.02,
+                  help="Maximum size of a Location"),
 )
 
 parser = optparse.OptionParser(prog="parse", usage=usage, option_list=option_list)
@@ -120,7 +130,7 @@ class Location(object):
         return outs
 
     def __str__(self):
-        return "L%s: (%f,%f)\t%s" % (self.ids[0], self.lats[0], self.lons[0], self.names[0])
+        return "L%s: (%f,%f)\t%s" % (self.ids[0], self.median()[0], self.median()[0], self.names)
 
 def distance(pointa, pointb):
     """
@@ -152,7 +162,7 @@ def main(parser):
 
     locations = merge_by_name(reports)
 
-    analyze(locations)
+    analyze(locations, options)
 
     return locations
 
@@ -229,14 +239,20 @@ def merge_by_name(reports):
 
     return locations
 
-def analyze(locations):
+def analyze(locations, options):
     """
-    TODO: Look for outliers in the dictionary of Locations
+    Print large extents and outliers in the dictionary of Locations
     """
     
     for location in locations.values():
         if location.extent > 0.0:
-            printf("%(extent)5f %(num)d\t(%(minlat)f, %(minlon)f)\t(%(maxlat)f, %(maxlon)f)\t%(names)s\n" % location.__dict__)
+            printf("%(extent).5f %(num)d  ll\t(%(minlat).4f %(minlon).4f)  ur\t(%(maxlat).4f %(maxlon).4f)\t%(names)s\n" % location.__dict__)
+
+        if location.extent > options.size:
+            median = location.median()
+            print "\tmedian\t(%.4f %.4f)" % (median[0], median[1])
+            for p in location.outliers():
+                print "\t\t(%.4f %.4f)" % (p[0], p[1])
 
 """
 FIXME: how to add timestamp to front of every logging line?  subclass logging??

@@ -16,7 +16,7 @@ Add support for getting data from the ushahidi web site via api or download form
 Use real spherical coordinates for distance calculations, etc.
 Link to a google map of the various points for a LocationCluster
 
-Any way to deal with reports that have multiple geolocations marked in them?
+Any way to deal with reports that have multiple geolocations marked in them?  Ushahidi seems to average them together now.
 
 Example for testing from ipython:
 import sys
@@ -250,8 +250,8 @@ def analyze(locations, reports, options):
     Print large extents and outliers in the dictionary of Locations
     """
     
-    # location_by_latitude = 
-    for location in sorted(locations.values(), key=lambda l:l.median()[0]):
+    # Loop thru Locations, sorted by Longitude
+    for location in sorted(locations.values(), key=lambda l:l.median()[1]):
         if location.extent >= options.size:
             printf("%(extent).5f %(num)d  ll\t(%(minlat).4f %(minlon).4f)  ur\t(%(maxlat).4f %(maxlon).4f)\t%(names)s\n" % location.__dict__)
             median = location.median()

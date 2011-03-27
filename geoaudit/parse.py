@@ -45,7 +45,7 @@ import electionaudits.models as models
 __author__ = "Neal McBurnett <http://neal.mcburnett.org/>"
 __copyright__ = "Copyright (c) 2011 Neal McBurnett"
 __license__ = "MIT"
-
+__version__ = "0.1.0"
 
 usage = """Usage: parse.py [options] [file]....
 
@@ -250,6 +250,8 @@ def analyze(locations, reports, options):
     Print large extents and outliers in the dictionary of Locations
     """
     
+    print "geoaudit for Ushahidi, version " + __version__ + "\n"
+
     # Loop thru Locations, sorted by Longitude
     for location in sorted(locations.values(), key=lambda l:l.median()[1]):
         if location.extent >= options.size:

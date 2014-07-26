@@ -44,7 +44,7 @@ import electionaudits.models as models
 
 __author__ = "Neal McBurnett <http://neal.mcburnett.org/>"
 __copyright__ = "Copyright (c) 2011 Neal McBurnett"
-__license__ = "MIT"
+__license__ = "LGPL 2.1"
 __version__ = "0.1.0"
 
 usage = """Usage: parse.py [options] [file]....
